@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Penalty Shootout</title>
+  <style>
+    body { margin: 0; background: #1e272e; color: white; font-family: sans-serif; text-align: center; }
+    .top { background: #2f3640; padding: 12px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-around; }
+    .p1 { color: #ff4757; } .p2 { color: #1e90ff; }
+    #field { position: relative; width: 340px; height: 320px; margin: 15px auto; background: #2ecc71; border: 4px solid white; border-radius: 10px; overflow: hidden; }
+    #goal { position: absolute; top: 20px; left: 45px; width: 250px; height: 90px; border: 5px solid white; border-bottom: none; background: rgba(255,255,255,0.2); }
+    #keeper { position: absolute; top: 55px; left: 150px; width: 40px; height: 55px; background: #1e90ff; border-radius: 6px; transition: 0.3s; }
+    #ball { position: absolute; top: 260px; left: 158px; width: 24px; height: 24px; background: white; border: 2px solid black; border-radius: 50%; transition: 0.4s ease-out; }
+    #aim { position: absolute; top: 75px; left: 162px; width: 16px; height: 16px; border: 3px solid #ffdd59; border-radius: 50%; }
+    #msg { font-size: 18px; margin: 10px; min-height: 24px; font-weight: bold; }
+    .btns { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    button { padding: 15px 22px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; background: #ffa502; color: #1e272e; cursor: pointer; }
+    button:active { transform: scale(0.95); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <span class="p1">P1: <span id="s1">0</span></span>
+    <span>Round <span id="rnd">1</span>/5</span>
+    <span class="p2">P2: <span id="s2">0</span></span>
+  </div>
+
+  <div id="field">
+    <div id="goal"></div>
+    <div id="keeper"></div>
+    <div id="aim"></div>
+    <div id="ball"></div>
+  </div>
+
+  <div id="msg">Player 1: Tap SHOOT to lock aim!</div>
+
+  <div class="btns" id="shoot-box">
+    <button onclick="shoot()">⚽ LOCK AIM & SHOOT</button>
+  </div>
+
+  <div class="btns hidden" id="dive-box">
+    <button onclick="dive(65)">🧤 DIVE LEFT</button>
+    <button onclick="dive(150)">🧤 STAY</button>
+    <button onclick="dive(235)">🧤 DIVE RIGHT</button>
+  </div>
+
+  <div class="btns hidden" id="reset-box">
+    <button onclick="reset()">🔄 PLAY AGAIN</button>
+  </div>
+
+  <script>
+    let s1 = 0, s2 = 0, rnd = 1, turn = 1, aimX = 162, dir = 4, targetX = 162, active = true;
+    const aim = document.getElementById('aim'), ball = document.getElementById('ball'), keeper = document.getElementById('keeper'), msg = document.getElementById('msg');
+
+    setInterval(() => {
+      if (!active) return;
+      aimX += dir;
+      if (aimX > 270 || aimX < 50) dir *= -1;
+      aim.style.left = aimX + 'px';
+    }, 20);
+
+    function shoot() {
+      active = false;
+      targetX = aimX;
+      document.getElementById('shoot-box').classList.add('hidden');
+      document.getElementById('dive-box').classList.remove('hidden');
+      msg.innerText = (turn === 1 ? "Player 2" : "Player 1") + ": Pick where to dive!";
+    }
+
+    function dive(kx) {
+      document.getElementById('dive-box').classList.add('hidden');
+      keeper.style.left = kx + 'px';
+      ball.style.top = '65px';
+      ball.style.left = targetX + 'px';
+
+      setTimeout(() => {
+        if (Math.abs(targetX - (kx + 8)) < 38) {
+          msg.innerText = "🧤 WHAT A SAVE!";
+        } else {
+          msg.innerText = "⚽ GOOOOOAL!";
+          if (turn === 1) { s1++; document.getElementById('s1').innerText = s1; }
+          else { s2++; document.getElementById('s2').innerText = s2; }
+        }
+        setTimeout(next, 1800);
+      }, 450);
+    }
+
+    function next() {
+      if (turn === 1) { turn = 2; } 
+      else {
+        if (rnd >= 5 && s1 !== s2) {
+          msg.innerText = (s1 > s2 ? "🏆 PLAYER 1 WINS!" : "🏆 PLAYER 2 WINS!");
+          document.getElementById('reset-box').classList.remove('hidden');
+          return;
+        }
+        turn = 1; rnd++;
+        document.getElementById('rnd').innerText = rnd;
+      }
+      ball.style.transition = 'none'; ball.style.top = '260px'; ball.style.left = '158px';
+      keeper.style.left = '150px';
+      keeper.style.background = turn === 1 ? '#1e90ff' : '#ff4757';
+      setTimeout(() => { ball.style.transition = '0.4s ease-out'; }, 50);
+      active = true;
+      document.getElementById('shoot-box').classList.remove('hidden');
+      msg.innerText = "Player " + turn + ": Tap SHOOT to lock aim!";
+    }
+
+    function reset() {
+      s1 = 0; s2 = 0; rnd = 1; turn = 1;
+      document.getElementById('s1').innerText = 0; document.getElementById('s2').innerText = 0; document.getElementById('rnd').innerText = 1;
+      document.getElementById('reset-box').classList.add('hidden');
+      next();
+    }
+  </script>
+</body>
+</html>
